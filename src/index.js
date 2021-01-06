@@ -170,14 +170,15 @@ class WheelOfFortune extends Component {
   _textRender = (x, y, number, i, color) => {
     return (
       <Text
-        x={x - number.length * 5}
-        y={y - 80}
+        x={x}
+        y={y}
         fill={
           this.props.options.textColor ? this.props.options.textColor : '#fff'
         }
         textAnchor="middle"
         fontSize={this.fontSize}>
-        {Array.from({length: number.length}).map((_, j) => {
+        {number}
+        {/* {Array.from({length: number.length}).map((_, j) => {
           // Render reward text vertically
           if (this.props.options.textAngle === 'vertical') {
             return (
@@ -197,7 +198,7 @@ class WheelOfFortune extends Component {
               </TSpan>
             );
           }
-        })}
+        })} */}
       </Text>
     );
   };
@@ -350,7 +351,9 @@ class WheelOfFortune extends Component {
       <View style={styles.container}>
         <TouchableOpacity style={styles.wheelWrap}>
           <Animated.View style={styles.content}>
-            {this._renderSvgWheel()}
+            {typeof this.props.wheelWrap === 'function'
+              ? this.props.wheelWrap(this._renderSvgWheel())
+              : this._renderSvgWheel()}
           </Animated.View>
         </TouchableOpacity>
         {this.props.options.playButton ? this._renderTopToPlay() : null}
