@@ -139,18 +139,21 @@ class WheelOfFortune extends Component {
     }
     // wheel turning clockwise
     return (
-      (this.numberOfSegments - Math.floor(deg / this.angleBySegment)) %
+      (this.numberOfSegments - Math.ceil(deg / this.angleBySegment)) %
       this.numberOfSegments
     );
   };
 
   _onPress = () => {
     const duration = this.props.options.duration || 10000;
+    const velocity = this.props.options.velocity || 100;
 
     this.setState({
       started: true,
     });
-    Animated.timing(this._angle, {
+    this._angle.setValue(0);
+    Animated.decay(this._angle, {
+      velocity: velocity,
       toValue:
         365 -
         this.winner * (this.oneTurn / this.numberOfSegments) +
@@ -171,14 +174,13 @@ class WheelOfFortune extends Component {
     return (
       <Text
         x={x}
-        y={y}
+        y={y - 70}
         fill={
           this.props.options.textColor ? this.props.options.textColor : '#fff'
         }
         textAnchor="middle"
         fontSize={this.fontSize}>
-        {number}
-        {/* {Array.from({length: number.length}).map((_, j) => {
+        {Array.from({length: number.length}).map((_, j) => {
           // Render reward text vertically
           if (this.props.options.textAngle === 'vertical') {
             return (
@@ -198,12 +200,42 @@ class WheelOfFortune extends Component {
               </TSpan>
             );
           }
-        })} */}
+        })}
       </Text>
     );
   };
 
   _renderSvgWheel = () => {
+    const localSvg = (
+      <AnimatedSvg
+        width={this.state.gameScreen}
+        height={this.state.gameScreen}
+        viewBox={`0 0 ${width} ${width}`}
+        style={{
+          transform: [{rotate: `-${this.angleOffset}deg`}],
+          margin: 10,
+        }}>
+        <G y={width / 2} x={width / 2}>
+          {this._wheelPaths.map((arc, i) => {
+            const [x, y] = arc.centroid;
+            const number = arc.value.toString();
+            return (
+              <G key={`arc-${i}`}>
+                <Path d={arc.path} strokeWidth={0} fill={arc.color} />
+                <G
+                  rotation={
+                    (i * this.oneTurn) / this.numberOfSegments +
+                    this.angleOffset
+                  }
+                  origin={`${x}, ${y}`}>
+                  {this._textRender(x, y, number, i)}
+                </G>
+              </G>
+            );
+          })}
+        </G>
+      </AnimatedSvg>
+    );
     return (
       <View style={styles.container}>
         {this._renderKnob()}
@@ -238,35 +270,9 @@ class WheelOfFortune extends Component {
               : '#fff',
             opacity: this.state.wheelOpacity,
           }}>
-          <AnimatedSvg
-            width={this.state.gameScreen}
-            height={this.state.gameScreen}
-            viewBox={`0 0 ${width} ${width}`}
-            style={{
-              transform: [{rotate: `-${this.angleOffset}deg`}],
-              margin: 10,
-            }}>
-            <G y={width / 2} x={width / 2}>
-              {this._wheelPaths.map((arc, i) => {
-                const [x, y] = arc.centroid;
-                const number = arc.value.toString();
-
-                return (
-                  <G key={`arc-${i}`}>
-                    <Path d={arc.path} strokeWidth={2} fill={arc.color} />
-                    <G
-                      rotation={
-                        (i * this.oneTurn) / this.numberOfSegments +
-                        this.angleOffset
-                      }
-                      origin={`${x}, ${y}`}>
-                      {this._textRender(x, y, number, i)}
-                    </G>
-                  </G>
-                );
-              })}
-            </G>
-          </AnimatedSvg>
+          {typeof this.props.wheelWrap === 'function'
+            ? this.props.wheelWrap(localSvg)
+            : localSvg}
         </Animated.View>
       </View>
     );
@@ -351,9 +357,7 @@ class WheelOfFortune extends Component {
       <View style={styles.container}>
         <TouchableOpacity style={styles.wheelWrap}>
           <Animated.View style={styles.content}>
-            {typeof this.props.wheelWrap === 'function'
-              ? this.props.wheelWrap(this._renderSvgWheel())
-              : this._renderSvgWheel()}
+            {this._renderSvgWheel()}
           </Animated.View>
         </TouchableOpacity>
         {this.props.options.playButton ? this._renderTopToPlay() : null}
