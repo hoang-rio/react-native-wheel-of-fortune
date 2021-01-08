@@ -29,7 +29,7 @@ class WheelOfFortune extends Component {
       winner: null,
       gameScreen: new Animated.Value(this.width - 40),
       wheelOpacity: new Animated.Value(1),
-      imageLeft: new Animated.Value(width / 2 - 30),
+      imageLeft: new Animated.Value(this.width / 2 - 30),
       imageTop: new Animated.Value(height / 2 - 70),
     };
     this.angle = 0;
@@ -355,11 +355,11 @@ class WheelOfFortune extends Component {
   render() {
     return (
       <View style={styles.container}>
-        <TouchableOpacity style={styles.wheelWrap}>
+        <View style={styles.wheelWrap}>
           <Animated.View style={styles.content}>
             {this._renderSvgWheel()}
           </Animated.View>
-        </TouchableOpacity>
+        </View>
         {this.props.options.playButton ? this._renderTopToPlay() : null}
       </View>
     );
