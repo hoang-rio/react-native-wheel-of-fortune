@@ -10,7 +10,15 @@ import {
 } from 'react-native';
 import * as d3Shape from 'd3-shape';
 
-import Svg, {G, Text, TSpan, Path} from 'react-native-svg';
+import Svg, {
+  G,
+  Text,
+  TSpan,
+  Path,
+  LinearGradient,
+  Defs,
+  Stop,
+} from 'react-native-svg';
 
 const AnimatedSvg = Animated.createAnimatedComponent(Svg);
 
@@ -99,7 +107,7 @@ class WheelOfFortune extends Component {
 
   makeWheel = () => {
     const data = Array.from({length: this.numberOfSegments}).fill(1);
-    const arcs = d3Shape.pie()(data);
+    const arcs = d3Shape.pie().sort(null)(data);
     var colors = this.props.options.colors
       ? this.props.options.colors
       : [
@@ -139,21 +147,22 @@ class WheelOfFortune extends Component {
     }
     // wheel turning clockwise
     return (
-      (this.numberOfSegments - Math.ceil(deg / this.angleBySegment)) %
+      (this.numberOfSegments - Math.floor(deg / this.angleBySegment)) %
       this.numberOfSegments
     );
   };
 
   _onPress = () => {
     const duration = this.props.options.duration || 10000;
-    const velocity = this.props.options.velocity || 100;
+    if (!this.props.options.winner && this.state.started) {
+      this.winner = Math.floor(Math.random() * this.numberOfSegments);
+    }
 
     this.setState({
       started: true,
     });
     this._angle.setValue(0);
-    Animated.decay(this._angle, {
-      velocity: velocity,
+    Animated.timing(this._angle, {
       toValue:
         365 -
         this.winner * (this.oneTurn / this.numberOfSegments) +
@@ -174,33 +183,35 @@ class WheelOfFortune extends Component {
     return (
       <Text
         x={x}
-        y={y - 70}
+        y={y}
         fill={
           this.props.options.textColor ? this.props.options.textColor : '#fff'
         }
         textAnchor="middle"
         fontSize={this.fontSize}>
-        {Array.from({length: number.length}).map((_, j) => {
-          // Render reward text vertically
-          if (this.props.options.textAngle === 'vertical') {
-            return (
-              <TSpan x={x} dy={this.fontSize} key={`arc-${i}-slice-${j}`}>
-                {number.charAt(j)}
-              </TSpan>
-            );
-          }
-          // Render reward text horizontally
-          else {
-            return (
-              <TSpan
-                y={y - 40}
-                dx={this.fontSize * 0.07}
-                key={`arc-${i}-slice-${j}`}>
-                {number.charAt(j)}
-              </TSpan>
-            );
-          }
-        })}
+        {this.props.options.textAngle !== 'vertical'
+          ? number
+          : Array.from({length: number.length}).map((_, j) => {
+              // Render reward text vertically
+              if (this.props.options.textAngle === 'vertical') {
+                return (
+                  <TSpan x={x} dy={this.fontSize} key={`arc-${i}-slice-${j}`}>
+                    {number.charAt(j)}
+                  </TSpan>
+                );
+              }
+              // Render reward text horizontally
+              else {
+                return (
+                  <TSpan
+                    y={y - 40}
+                    dx={this.fontSize * 0.07}
+                    key={`arc-${i}-slice-${j}`}>
+                    {number.charAt(j)}
+                  </TSpan>
+                );
+              }
+            })}
       </Text>
     );
   };
@@ -221,7 +232,31 @@ class WheelOfFortune extends Component {
             const number = arc.value.toString();
             return (
               <G key={`arc-${i}`}>
-                <Path d={arc.path} strokeWidth={0} fill={arc.color} />
+                <Defs>
+                  <LinearGradient id="gradOdd" x1="0" y1="1" x2="1" y2="0">
+                    <Stop offset="0" stopColor="#FBFAD5" stopOpacity="1" />
+                    <Stop offset="1" stopColor="#FFE79C" stopOpacity="1" />
+                  </LinearGradient>
+                  <LinearGradient id="gradEven" x1="0" y1="1" x2="1" y2="0">
+                    <Stop offset="0" stopColor="#FFB600" stopOpacity="1" />
+                    <Stop offset="1" stopColor="#FFE9A0" stopOpacity="1" />
+                  </LinearGradient>
+                  <LinearGradient id="gradOdd1" x1="0" y1="0" x2="1" y2="1">
+                    <Stop offset="0" stopColor="#FBFAD5" stopOpacity="1" />
+                    <Stop offset="1" stopColor="#FFE79C" stopOpacity="1" />
+                  </LinearGradient>
+                  <LinearGradient id="gradEven1" x1="0" y1="0" x2="1" y2="1">
+                    <Stop offset="0" stopColor="#FFB600" stopOpacity="1" />
+                    <Stop offset="1" stopColor="#FFE9A0" stopOpacity="1" />
+                  </LinearGradient>
+                </Defs>
+                <Path
+                  d={arc.path}
+                  strokeWidth={0}
+                  fill={`url(#grad${i % 2 === 0 ? 'Odd' : 'Even'}${
+                    i % 8 === 0 ? '' : '1'
+                  })`}
+                />
                 <G
                   rotation={
                     (i * this.oneTurn) / this.numberOfSegments +
