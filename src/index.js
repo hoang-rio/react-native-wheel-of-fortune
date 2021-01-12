@@ -23,9 +23,15 @@ import Svg, {
 const AnimatedSvg = Animated.createAnimatedComponent(Svg);
 
 const {width, height} = Dimensions.get('screen');
-
-class WheelOfFortune extends Component {
-  constructor(props) {
+type Props = {
+  widthOffset?: number,
+  onStart?: () => any,
+  wheelWrap?: (wheel: Component) => Component,
+  getWinner: (value: any, index: number) => void, // Fire when wheel finished
+  usePadAngle?: boolean,
+};
+class WheelOfFortune extends Component<Props, any> {
+  constructor(props: Props) {
     super(props);
     this.width =
       width -
@@ -153,14 +159,21 @@ class WheelOfFortune extends Component {
   };
 
   _onPress = () => {
+    if (this.state.started) {
+      return;
+    }
     const duration = this.props.options.duration || 10000;
-    if (!this.props.options.winner && this.state.started) {
+    if (!this.props.options.winner) {
       this.winner = Math.floor(Math.random() * this.numberOfSegments);
     }
 
     this.setState({
+      finished: false,
       started: true,
     });
+    if (this.props.onStart) {
+      this.props.onStart();
+    }
     this._angle.setValue(0);
     Animated.timing(this._angle, {
       toValue:
@@ -172,6 +185,7 @@ class WheelOfFortune extends Component {
     }).start(() => {
       const winnerIndex = this._getWinnerIndex();
       this.setState({
+        started: false,
         finished: true,
         winner: this._wheelPaths[winnerIndex].value,
       });
@@ -241,21 +255,11 @@ class WheelOfFortune extends Component {
                     <Stop offset="0" stopColor="#FFB600" stopOpacity="1" />
                     <Stop offset="1" stopColor="#FFE9A0" stopOpacity="1" />
                   </LinearGradient>
-                  <LinearGradient id="gradOdd1" x1="0" y1="0" x2="1" y2="1">
-                    <Stop offset="0" stopColor="#FBFAD5" stopOpacity="1" />
-                    <Stop offset="1" stopColor="#FFE79C" stopOpacity="1" />
-                  </LinearGradient>
-                  <LinearGradient id="gradEven1" x1="0" y1="0" x2="1" y2="1">
-                    <Stop offset="0" stopColor="#FFB600" stopOpacity="1" />
-                    <Stop offset="1" stopColor="#FFE9A0" stopOpacity="1" />
-                  </LinearGradient>
                 </Defs>
                 <Path
                   d={arc.path}
                   strokeWidth={0}
-                  fill={`url(#grad${i % 2 === 0 ? 'Odd' : 'Even'}${
-                    i % 8 === 0 ? '' : '1'
-                  })`}
+                  fill={`url(#grad${i % 2 === 0 ? 'Odd' : 'Even'})`}
                 />
                 <G
                   rotation={
