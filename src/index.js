@@ -87,7 +87,7 @@ class WheelOfFortune extends Component<Props, any> {
     this.prepareWheel();
     this.resetWheelState();
     this.angleListener();
-    this._onPress();
+    this.onPress();
   };
 
   angleListener = () => {
@@ -158,7 +158,7 @@ class WheelOfFortune extends Component<Props, any> {
     );
   };
 
-  _onPress = () => {
+  onPress = () => {
     if (this.state.started) {
       return;
     }
@@ -240,22 +240,22 @@ class WheelOfFortune extends Component<Props, any> {
           transform: [{rotate: `-${this.angleOffset}deg`}],
           margin: 10,
         }}>
+        <Defs>
+          <LinearGradient id="gradOdd" x1="0" y1="1" x2="1" y2="0">
+            <Stop offset="0" stopColor="#FBFAD5" stopOpacity="1" />
+            <Stop offset="1" stopColor="#FFE79C" stopOpacity="1" />
+          </LinearGradient>
+          <LinearGradient id="gradEven" x1="0" y1="1" x2="1" y2="0">
+            <Stop offset="0" stopColor="#FFB600" stopOpacity="1" />
+            <Stop offset="1" stopColor="#FFE9A0" stopOpacity="1" />
+          </LinearGradient>
+        </Defs>
         <G y={width / 2} x={width / 2}>
           {this._wheelPaths.map((arc, i) => {
             const [x, y] = arc.centroid;
             const number = arc.value.toString();
             return (
               <G key={`arc-${i}`}>
-                <Defs>
-                  <LinearGradient id="gradOdd" x1="0" y1="1" x2="1" y2="0">
-                    <Stop offset="0" stopColor="#FBFAD5" stopOpacity="1" />
-                    <Stop offset="1" stopColor="#FFE79C" stopOpacity="1" />
-                  </LinearGradient>
-                  <LinearGradient id="gradEven" x1="0" y1="1" x2="1" y2="0">
-                    <Stop offset="0" stopColor="#FFB600" stopOpacity="1" />
-                    <Stop offset="1" stopColor="#FFE9A0" stopOpacity="1" />
-                  </LinearGradient>
-                </Defs>
                 <Path
                   d={arc.path}
                   strokeWidth={0}
@@ -385,7 +385,7 @@ class WheelOfFortune extends Component<Props, any> {
     return (
       <TouchableOpacity
         style={styles.playButton}
-        onPress={() => this._onPress()}>
+        onPress={() => this.onPress()}>
         {this.props.options.playButton()}
       </TouchableOpacity>
     );
