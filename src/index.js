@@ -53,18 +53,19 @@ class WheelOfFortune extends Component<Props, any> {
 
   shouldComponentUpdate(nextProps, nextState) {
     if (
-      this.Rewards !== nextProps.options.rewards ||
-      (nextProps.options.winner !== undefined &&
+      this.props.options.rewards !== nextProps.options.rewards ||
+      (this.props.options.winner !== undefined &&
         this.winner !== nextProps.options.winner)
     ) {
-      this.prepareWheel();
+      this.prepareWheel(nextProps.options.rewards);
+      this.angleListener();
       return true;
     }
     return false;
   }
 
-  prepareWheel = () => {
-    this.Rewards = this.props.options.rewards;
+  prepareWheel = (rewards) => {
+    this.Rewards = rewards || this.props.options.rewards;
     this.RewardCount = this.Rewards.length;
 
     this.numberOfSegments = this.RewardCount;
